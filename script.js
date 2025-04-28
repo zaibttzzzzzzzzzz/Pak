@@ -1,68 +1,76 @@
-const searchBtn = document.getElementById('searchBtn');
-const clearBtn = document.getElementById('clearBtn');
-const shareBtn = document.getElementById('shareBtn');
-const numberInput = document.getElementById('numberInput');
-const resultBox = document.getElementById('result');
-const spinner = document.getElementById('spinner');
-const clickSound = document.getElementById('clickSound');
-const successSound = document.getElementById('successSound');
+function checkSIM() {
+  const number = document.getElementById("numberInput").value.trim();
+  const outputDiv = document.getElementById("output");
+  const outputSection = document.getElementById("outputSection");
+  const clickSound = document.getElementById("clickSound");
+  const resultSound = document.getElementById("resultSound");
 
-function validateNumber(number) {
-    return /^03[0-9]{9}$/.test(number);
-}
+  clickSound.play();
 
-function detectNetwork(number) {
-    const code = number.slice(2, 5);
-    const network = {
-        "300": "Jazz", "301": "Jazz", "302": "Jazz", "303": "Jazz", "304": "Jazz",
-        "310": "Zong", "311": "Zong", "312": "Zong", "313": "Zong",
-        "320": "Ufone", "321": "Ufone", "322": "Ufone", "323": "Ufone",
-        "330": "Telenor", "331": "Telenor", "332": "Telenor", "333": "Telenor"
-    };
-    return network[code] || "Unknown Network";
-}
+  if (!/^[0-9]{11}$/.test(number)) {
+    outputSection.style.display = "block";
+    outputDiv.innerHTML = "<p>Please enter a valid 11-digit number.</p>";
+    return;
+  }
 
-searchBtn.addEventListener('click', async () => {
-    clickSound.play();
-    const number = numberInput.value.trim();
-    if (!validateNumber(number)) {
-        alert('Please enter a valid Pakistani number starting with 03...');
-        return;
-    }
-    spinner.classList.remove('hidden');
-    resultBox.innerHTML = '';
+  outputSection.style.display = "block";
+  outputDiv.innerHTML = "<p>Loading...</p>";
+  document.getElementById("checkBtn").innerText = "Loading...";
 
-    try {
-        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://fam-official.serv00.net/sim/api.php?num=${number}`)}`);
-        const data = await response.json();
-        const parsedData = JSON.parse(data.contents);
-
-        let resultHTML = `
-            <strong>Network:</strong> ${detectNetwork(number)}<br>
-            <strong>Owner (English):</strong> ${parsedData.data.name}<br>
-            <strong>مالک (اردو):</strong> ${parsedData.data.urdu_name}<br>
-            <strong>City:</strong> ${parsedData.data.city}
+  fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://fam-official.serv00.net/sim/api.php?num=${number}`)}`)
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById("checkBtn").innerText = "Check Info";
+      const content = JSON.parse(data.contents);
+      if (content.status === "success" && content.data.length > 0) {
+        const info = content.data[0];
+        const network = detectNetwork(number);
+        const resultText = `
+          <div class="card">
+            <p><strong>Name:</strong> ${info.Name}</p>
+            <p><strong>نام:</strong> ${info.Name}</p>
+            <p><strong>Mobile:</strong> ${info.Mobile} (${network})</p>
+            <p><strong>CNIC:</strong> ${info.CNIC}</p>
+            <p><strong>شناختی کارڈ:</strong> ${info.CNIC}</p>
+            <p><strong>Address:</strong> ${info.Address}</p>
+            <p><strong>پتہ:</strong> ${info.Address}</p>
+          </div>
         `;
+        outputDiv.innerHTML = resultText;
+        resultSound.play();
 
-        resultBox.innerHTML = resultHTML;
-        successSound.play();
-    } catch (error) {
-        resultBox.innerHTML = 'Error fetching number information!';
-    } finally {
-        spinner.classList.add('hidden');
-    }
-});
+        // WhatsApp Share Link
+        document.getElementById("shareBtn").href = `https://wa.me/?text=${encodeURIComponent(info.Name + "\n" + info.Mobile + "\n" + info.CNIC + "\n" + info.Address)}`;
 
-clearBtn.addEventListener('click', () => {
-    numberInput.value = '';
-    resultBox.innerHTML = '';
-});
+      } else {
+        outputDiv.innerHTML = "<p>No data found.</p>";
+      }
+    })
+    .catch(error => {
+      outputDiv.innerHTML = "<p>Error fetching data. Please try again later.</p>";
+      document.getElementById("checkBtn").innerText = "Check Info";
+    });
+}
 
-shareBtn.addEventListener('click', () => {
-    if (resultBox.innerText.trim() !== "") {
-        const message = `Number Information:\n${resultBox.innerText}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-    } else {
-        alert('No result to share!');
-    }
-});
+function detectNetwork(num) {
+  const code = num.substring(0, 4);
+  if (["0300","0301","0302","0303","0304","0305","0306"].includes(code)) return "Jazz";
+  if (["0310","0311","0312","0313","0314","0315"].includes(code)) return "Zong";
+  if (["0320","0321","0322","0323","0324","0325"].includes(code)) return "Warid";
+  if (["0330","0331","0332","0333","0334","0335"].includes(code)) return "Ufone";
+  if (["0340","0341","0342","0343","0344","0345"].includes(code)) return "Telenor";
+  return "Unknown";
+}
+
+function copyResult() {
+  const text = document.getElementById("output").innerText;
+  navigator.clipboard.writeText(text)
+    .then(() => alert("Result copied to clipboard!"))
+    .catch(err => alert("Failed to copy."));
+}
+
+function clearResult() {
+  document.getElementById("numberInput").value = "";
+  document.getElementById("outputSection").style.display = "none";
+  document.getElementById("output").innerHTML = "";
+}
