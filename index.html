@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Information Finder</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+    <h1>Pakistani Number Information</h1>
+    <p class="author">Created by Shahzaib</p>
+    
+    <input type="text" id="numberInput" placeholder="Enter Pakistani number" maxlength="11">
+    
+    <button id="searchBtn">Search</button>
+    <div id="spinner" class="spinner hidden"></div>
+
+    <div id="result" class="resultBox"></div>
+
+    <div class="buttons">
+        <button id="clearBtn">Clear</button>
+        <button id="shareBtn">Share to WhatsApp</button>
+    </div>
+</div>
+
+<audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3"></audio>
+<audio id="successSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+
+<script src="script.js"></script>
+
+</body>
+</html>
